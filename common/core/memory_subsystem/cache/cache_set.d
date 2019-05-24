@@ -12,6 +12,9 @@
  /home/arindam/Desktop/Sniper/sniper-6.1/common/misc/log.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/misc/lock.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_lru.h \
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_lru_new.h \
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_lru_l3.h \
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_lru_l2.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_mru.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_nmru.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set_nru.h \

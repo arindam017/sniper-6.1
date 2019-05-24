@@ -54,6 +54,9 @@ ShmemPerfModel::incrElapsedTime(SubsecondTime time, Thread_t thread_num)
    SubsecondTime i_elapsed_time = m_elapsed_time[thread_num];
    SubsecondTime t_elapsed_time = i_elapsed_time + time;
 
+   LOG_PRINT("elapsedTime: %s Increment: %s Incremented:%s\n",
+          itostr(i_elapsed_time).c_str(), itostr(time).c_str(), itostr(t_elapsed_time).c_str());    
+
    LOG_ASSERT_ERROR(t_elapsed_time >= i_elapsed_time,
          "t_elapsed_time(%s) < i_elapsed_time(%s)",
          itostr(t_elapsed_time).c_str(),

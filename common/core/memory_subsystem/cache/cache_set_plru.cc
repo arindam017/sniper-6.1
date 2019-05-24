@@ -19,7 +19,7 @@ CacheSetPLRU::~CacheSetPLRU()
 }
 
 UInt32
-CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr)
+CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 {
    // Invalidations may mess up the LRU bits
 
@@ -27,7 +27,7 @@ CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
-         updateReplacementIndex(i);
+         updateReplacementIndex(i,0);
          return i;
       }
    }
@@ -82,13 +82,13 @@ CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr)
 
 
    LOG_ASSERT_ERROR(isValidReplacement(retValue), "PLRU selected an invalid replacement candidate" );
-   updateReplacementIndex(retValue);
+   updateReplacementIndex(retValue,0);
    return retValue;
 
 }
 
 void
-CacheSetPLRU::updateReplacementIndex(UInt32 accessed_index)
+CacheSetPLRU::updateReplacementIndex(UInt32 accessed_index,  UInt8 write_flag)
 {
    if (m_associativity == 4)
    {
@@ -113,3 +113,11 @@ CacheSetPLRU::updateReplacementIndex(UInt32 accessed_index)
       LOG_PRINT_ERROR("PLRU doesn't support associativity %d", m_associativity);
    }
 }
+
+////////////created by Arindam//////////////////sn
+void
+CacheSetPLRU::updateLoopBitPolicy(UInt32 index, UInt8 loopbit)
+{
+  
+}
+//////////////////////////////////////////////////

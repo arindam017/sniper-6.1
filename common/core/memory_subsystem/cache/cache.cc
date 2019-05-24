@@ -4,6 +4,8 @@
 
 // Cache class
 // constructors/destructors
+
+
 Cache::Cache(
    String name,
    String cfgname,
@@ -123,18 +125,19 @@ void
 Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       bool* eviction, IntPtr* evict_addr,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
-      SubsecondTime now, CacheCntlr *cntlr)
+      SubsecondTime now, CacheCntlr *cntlr, int mcomponent, UInt8 write_flag) //nss; int mcomponent and write_flag argument has been added by ARINDAM. Remove if necessary
 {
    IntPtr tag;
    UInt32 set_index;
-   splitAddress(addr, tag, set_index);
+   splitAddress(addr, tag, set_index);  
+   
 
    CacheBlockInfo* cache_block_info = CacheBlockInfo::create(m_cache_type);
    cache_block_info->setTag(tag);
 
-   m_sets[set_index]->insert(cache_block_info, fill_buff,
-         eviction, evict_block_info, evict_buff, cntlr);
-   *evict_addr = tagToAddress(evict_block_info->getTag());
+   m_sets[set_index]->insert2(cache_block_info, fill_buff,  //sn insert2 function is insert with additional argument
+         eviction, evict_block_info, evict_buff, cntlr, write_flag); //cache_block_info is inserted in required place, and the block which is evicted is copied in evict_block_info [ARINDAM], also write_flag added
+   *evict_addr = tagToAddress(evict_block_info->getTag()); //evict_addr is the address of the block which was evicted due to insert [ARINDAM]
 
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
@@ -152,6 +155,19 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    delete cache_block_info;
 }
 
+///////////////created by Arindam////////////sn
+void
+Cache::updateLoopBitCache(IntPtr addr, UInt8 loopbit)
+{
+   IntPtr tag;
+   UInt32 set_index;
+   splitAddress(addr, tag, set_index);
+   //printf("\n**********start*************\n");  //sn
+   //printf("set_index is %d and tag is  %" PRIxPTR "(printed in updateLoopBitCache)\n", set_index, tag);  //sn
+   m_sets[set_index]->updateLoopBitSet(tag, loopbit);
+   
+}
+///////////////////////////////////////////////
 
 // Single line cache access at addr
 CacheBlockInfo*

@@ -94,7 +94,7 @@ void ATD::access(Core::mem_op_t mem_op_type, bool cache_hit, IntPtr address)
 
       if (atd_hit)
       {
-         m_sets[set_index]->updateReplacementIndex(line_index);
+         m_sets[set_index]->updateReplacementIndex(line_index,0);
       }
       else
       {

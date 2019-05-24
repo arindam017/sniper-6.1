@@ -162,7 +162,7 @@ DramCache::insertLine(Cache::access_t access, IntPtr address, core_id_t requeste
 
    m_cache->insertSingleLine(address, data_buf,
       &eviction, &evict_address, &evict_block_info, evict_buf,
-      now);
+      now, 0, 100); //nss
    m_cache->peekSingleLine(address)->setCState(access == Cache::STORE ? CacheState::MODIFIED : CacheState::SHARED);
 
    // Write to data array off-line, so don't affect return latency

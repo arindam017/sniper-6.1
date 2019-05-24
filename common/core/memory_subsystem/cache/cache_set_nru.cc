@@ -22,7 +22,7 @@ CacheSetNRU::~CacheSetNRU()
 }
 
 UInt32
-CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr)
+CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 {
    // Invalidations may mess up the LRU bits
 
@@ -34,7 +34,7 @@ CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr)
       {
          // If there is an invalid line(s) in the set, regardless of the LRU bits of other lines, we choose the first invalid line to replace
          // Mark our newly-inserted line as recently used
-         updateReplacementIndex(i);
+         updateReplacementIndex(i,0);
          return i;
       }
       else if (m_lru_bits[i] == 0 && isValidReplacement(i))
@@ -55,7 +55,7 @@ CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr)
          m_replacement_pointer = (m_replacement_pointer + 1) % m_associativity;
 
          // Mark our newly-inserted line as recently used
-         updateReplacementIndex(index);
+         updateReplacementIndex(index,0);
          return index;
       }
 
@@ -66,7 +66,7 @@ CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr)
 }
 
 void
-CacheSetNRU::updateReplacementIndex(UInt32 accessed_index)
+CacheSetNRU::updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag)
 {
    m_lru_bits[accessed_index] = 1;
    m_num_bits_set++;
@@ -83,3 +83,11 @@ CacheSetNRU::updateReplacementIndex(UInt32 accessed_index)
       }
    }
 }
+
+////////////created by Arindam//////////////////sn
+void
+CacheSetNRU::updateLoopBitPolicy(UInt32 index, UInt8 loopbit)
+{
+  
+}
+//////////////////////////////////////////////////

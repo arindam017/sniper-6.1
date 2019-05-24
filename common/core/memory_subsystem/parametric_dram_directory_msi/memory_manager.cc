@@ -101,6 +101,9 @@ MemoryManager::MemoryManager(Core* core,
                objectName = "L" + level;
                break;
          }
+         
+         int latency = Sim()->getCfg()->getIntArray("perf_model/l3_cache/data_write_time", core->getId());
+         printf("L3 data_write_time:%d\n", latency);
 
          const ComponentPeriod *clock_domain = NULL;
          String domain_name = Sim()->getCfg()->getStringArray("perf_model/" + configName + "/dvfs_domain", core->getId());
@@ -126,7 +129,11 @@ MemoryManager::MemoryManager(Core* core,
                ? Sim()->getCfg()->getBoolArray(  "perf_model/" + configName + "/coherent", core->getId())
                : true,
             ComponentLatency(clock_domain, Sim()->getCfg()->getIntArray("perf_model/" + configName + "/data_access_time", core->getId())),
+
             ComponentLatency(clock_domain, Sim()->getCfg()->getIntArray("perf_model/" + configName + "/tags_access_time", core->getId())),
+
+            ComponentLatency(clock_domain, Sim()->getCfg()->getIntArray("perf_model/" + configName + "/data_write_time", core->getId())),
+
             ComponentLatency(clock_domain, Sim()->getCfg()->getIntArray("perf_model/" + configName + "/writeback_time", core->getId())),
             ComponentBandwidthPerCycle(clock_domain,
                i < (UInt32)m_last_level_cache
@@ -161,6 +168,7 @@ MemoryManager::MemoryManager(Core* core,
             Sim()->getCfg()->getStringArray("perf_model/nuca/replacement_policy", core->getId()),
             false, true,
             ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/data_access_time", core->getId())),
+            ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/data_write_time", core->getId())),	//sn
             ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/tags_access_time", core->getId())),
             ComponentLatency(global_domain, 0), ComponentBandwidthPerCycle(global_domain, 0), "", false, 0, "", 0 // unused
          );
@@ -313,7 +321,8 @@ MemoryManager::MemoryManager(Core* core,
       m_cache_perf_models[(MemComponent::component_t)i] = CachePerfModel::create(
        cache_parameters[(MemComponent::component_t)i].perf_model_type,
        cache_parameters[(MemComponent::component_t)i].data_access_time,
-       cache_parameters[(MemComponent::component_t)i].tags_access_time
+       cache_parameters[(MemComponent::component_t)i].tags_access_time,
+       cache_parameters[(MemComponent::component_t)i].data_write_time
       );
 
 
@@ -478,10 +487,10 @@ MYLOG("begin");
          break;
 
       case MemComponent::TAG_DIR:
+         LOG_ASSERT_ERROR(m_tag_directory_present, "Tag directory NOT present");
+
          switch(sender_mem_component)
          {
-            LOG_ASSERT_ERROR(m_tag_directory_present, "Tag directory NOT present");
-
             case MemComponent::LAST_LEVEL_CACHE:
                m_dram_directory_cntlr->handleMsgFromL2Cache(sender, shmem_msg);
                break;
@@ -498,10 +507,10 @@ MYLOG("begin");
          break;
 
       case MemComponent::DRAM:
+         LOG_ASSERT_ERROR(m_dram_cntlr_present, "Dram Cntlr NOT present");
+
          switch(sender_mem_component)
          {
-            LOG_ASSERT_ERROR(m_dram_cntlr_present, "Dram Cntlr NOT present");
-
             case MemComponent::TAG_DIR:
             {
                DramCntlrInterface* dram_interface = m_dram_cache ? (DramCntlrInterface*)m_dram_cache : (DramCntlrInterface*)m_dram_cntlr;
@@ -622,6 +631,13 @@ MemoryManager::incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t t
    MYLOG("cycles += %s", itostr(latency).c_str());
    getShmemPerfModel()->incrElapsedTime(latency, thread_num);
 }
+
+SubsecondTime
+MemoryManager::getElapsedTime(ShmemPerfModel::Thread_t thread_num)	//sn; added from Anushree's files
+{
+   return getShmemPerfModel()->getElapsedTime(thread_num);
+}
+
 
 void
 MemoryManager::incrElapsedTime(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type, ShmemPerfModel::Thread_t thread_num)

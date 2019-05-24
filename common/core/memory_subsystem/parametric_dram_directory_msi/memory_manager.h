@@ -111,5 +111,6 @@ namespace ParametricDramDirectoryMSI
          SubsecondTime getCost(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type);
          void incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
          void incrElapsedTime(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
+         SubsecondTime getElapsedTime(ShmemPerfModel::Thread_t thread_num);	//sn; Added from Anushree's files
    };
 }

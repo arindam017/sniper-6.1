@@ -7,7 +7,7 @@
 #$4 result folder
 
 pre="/home/arindam/Desktop/Sniper/sniper-6.1/"
-pre_res="/home/arindam/Desktop/Sniper/sniper-6.1/bzip/results/"
+pre_res="/home/arindam/Desktop/Sniper/sniper-6.1/lap_lru_results/"
 extn=".out"
 
 # lets understand the script with an example
@@ -36,11 +36,12 @@ for traces in $path_to_trace1/*.sift
 
 # for traces in ./traces/250M/gcc/*.sift
 
-for i in {0..3}
-  do
-    echo "./run-sniper -n 1 -c ./config/stride_only/gainestown$2 -d $path_to_res"/" -g --perf_model/l3_cache/cache_size=2048 --traces=${tr_list1[i]}
-	echo "mv $path_to_res"/"sim.out $path_to_res"/"$1$(grep -o "_[0-9]\+"<<<${tr_list1[i]})
-    ./run-sniper -n 1 -c gainestown$2 -d $path_to_res"/" -g --perf_model/l3_cache/cache_size=2048 --traces=${tr_list1[i]}
+#for i in {0..3}
+#  do
+    echo "./run-sniper -n 1 -c ./config/stride_only/gainestown$2 -d $path_to_res"/"  --traces=${tr_list1[2]}
+	echo "mv $path_to_res"/"sim.out $path_to_res"/"$1$(grep -o "_[0-9]\+"<<<${tr_list1[2]})
+    #./run-sniper -n 1 -c gainestown$2 -d $path_to_res"/" -g --perf_model/l3_cache/cache_size=8192 --traces=${tr_list1[i]}
+    ./run-sniper -n 1 -c gainestown$2 -d $path_to_res"/" --traces=${tr_list1[2]}
 
     # we can test if all the 4 files have been created
     filename1=$path_to_res"/"sim.out
@@ -52,12 +53,13 @@ for i in {0..3}
         echo "Run Fine"
     else
 	    #try once more
-	    ./run-sniper -n 1 -c gainestown$2 -d $path_to_res"/" -g --perf_model/l3_cache/cache_size=2048 --traces=${tr_list1[i]}
+	    #./run-sniper -n 1 -c gainestown$2 -d $path_to_res"/" -g --perf_model/l3_cache/cache_size=8192 --traces=${tr_list1[i]}
+	    ./run-sniper -n 1 -c gainestown$2 -d $path_to_res"/" --traces=${tr_list1[2]}
     fi
     
 	mv $path_to_res"/"sim.out $path_to_res"/"$1$(grep -o "_[0-9]\+"<<<${tr_list1[i]})".out"
     mv $path_to_res"/"sim.cfg $path_to_res"/"$1$(grep -o "_[0-9]\+"<<<${tr_list1[i]})".cfg"
     mv $path_to_res"/"sim.info $path_to_res"/"$1$(grep -o "_[0-9]\+"<<<${tr_list1[i]})".info"
     mv $path_to_res"/"sim.stats.sqlite3 $path_to_res"/"$1$(grep -o "_[0-9]\+"<<<${tr_list1[i]})".stats.sqlite3"
-  done
+#  done
 

@@ -21,7 +21,7 @@ CacheSetNMRU::~CacheSetNMRU()
 }
 
 UInt32
-CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr)
+CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 {
    // Invalidations may mess up the LRU bits
 
@@ -29,7 +29,7 @@ CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
-         updateReplacementIndex(i);
+         updateReplacementIndex(i,0);
          return i;
       }
    }
@@ -41,7 +41,7 @@ CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr)
          // We choose the first line that is not MRU as the victim (note that we start searching from the replacement pointer position)
          UInt8 index = m_replacement_pointer;
          m_replacement_pointer = (m_replacement_pointer + 1) % m_associativity;
-         updateReplacementIndex(index);
+         updateReplacementIndex(index,0);
          return index;
       }
 
@@ -52,7 +52,7 @@ CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr)
 }
 
 void
-CacheSetNMRU::updateReplacementIndex(UInt32 accessed_index)
+CacheSetNMRU::updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag)
 {
    for (UInt32 i = 0; i < m_associativity; i++)
    {
@@ -61,3 +61,11 @@ CacheSetNMRU::updateReplacementIndex(UInt32 accessed_index)
    }
    m_lru_bits[accessed_index] = 0;
 }
+
+////////////created by Arindam//////////////////sn
+void
+CacheSetNMRU::updateLoopBitPolicy(UInt32 index, UInt8 loopbit)
+{
+  
+}
+//////////////////////////////////////////////////

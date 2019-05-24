@@ -19,15 +19,15 @@ CacheSetMRU::~CacheSetMRU()
 }
 
 UInt32
-CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr)
+CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 {
    // Invalidations may mess up the LRU bits
-
+   
    for (UInt32 i = 0; i < m_associativity; i++)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
-         updateReplacementIndex(i);
+         updateReplacementIndex(i,0);
          return i;
       }
    }
@@ -39,7 +39,7 @@ CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr)
       {
          if (m_lru_bits[i] == target && isValidReplacement(i))
          {
-            updateReplacementIndex(i);
+            updateReplacementIndex(i,0);
             return i;
          }
       }
@@ -50,7 +50,7 @@ CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr)
 }
 
 void
-CacheSetMRU::updateReplacementIndex(UInt32 accessed_index)
+CacheSetMRU::updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag)
 {
    for (UInt32 i = 0; i < m_associativity; i++)
    {
@@ -59,3 +59,11 @@ CacheSetMRU::updateReplacementIndex(UInt32 accessed_index)
    }
    m_lru_bits[accessed_index] = 0;
 }
+
+////////////created by Arindam//////////////////sn
+void
+CacheSetMRU::updateLoopBitPolicy(UInt32 index, UInt8 loopbit)
+{
+  
+}
+//////////////////////////////////////////////////

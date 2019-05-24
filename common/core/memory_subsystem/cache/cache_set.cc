@@ -1,5 +1,8 @@
 #include "cache_set.h"
 #include "cache_set_lru.h"
+#include "cache_set_lru_new.h"
+#include "cache_set_lru_l3.h"
+#include "cache_set_lru_l2.h"
 #include "cache_set_mru.h"
 #include "cache_set_nmru.h"
 #include "cache_set_nru.h"
@@ -12,6 +15,7 @@
 #include "simulator.h"
 #include "config.h"
 #include "config.hpp"
+
 
 CacheSet::CacheSet(CacheBase::cache_t cache_type,
       UInt32 associativity, UInt32 blocksize):
@@ -49,21 +53,30 @@ CacheSet::read_line(UInt32 line_index, UInt32 offset, Byte *out_buff, UInt32 byt
    if (out_buff != NULL && m_blocks != NULL)
       memcpy((void*) out_buff, &m_blocks[line_index * m_blocksize + offset], bytes);
 
+
    if (update_replacement)
-      updateReplacementIndex(line_index);
+   {
+      //printf("updateReplacementIndex called for read hit \n"); //n
+      updateReplacementIndex(line_index,0);
+   }
 }
 
 void
 CacheSet::write_line(UInt32 line_index, UInt32 offset, Byte *in_buff, UInt32 bytes, bool update_replacement)
 {
+   
    assert(offset + bytes <= m_blocksize);
    //assert((in_buff == NULL) == (bytes == 0));
 
    if (in_buff != NULL && m_blocks != NULL)
       memcpy(&m_blocks[line_index * m_blocksize + offset], (void*) in_buff, bytes);
 
+
    if (update_replacement)
-      updateReplacementIndex(line_index);
+   {
+      //printf("updateReplacementIndex called for write hit \n"); //n
+      updateReplacementIndex(line_index,1);
+   }
 }
 
 CacheBlockInfo*
@@ -95,12 +108,16 @@ CacheSet::invalidate(IntPtr& tag)
    return false;
 }
 
+/////////////////created by arindam///////////////////////////
 void
-CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr)
+CacheSet::insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr, UInt8 write_flag) //sn insert2 function is insert with additional argument
 {
    // This replacement strategy does not take into account the fact that
    // cache blocks can be voluntarily flushed or invalidated due to another write request
-   const UInt32 index = getReplacementIndex(cntlr);
+   //printf("getReplacementIndex called \n"); //n
+   //printf("flag is %d inside insert2 \n", write_flag);   //sn
+   const UInt32 index = getReplacementIndex(cntlr, write_flag);
+   
    assert(index < m_associativity);
 
    assert(eviction != NULL);
@@ -109,7 +126,7 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
    {
       *eviction = true;
       // FIXME: This is a hack. I dont know if this is the best way to do
-      evict_block_info->clone(m_cache_block_info_array[index]);
+      evict_block_info->clone(m_cache_block_info_array[index]);   //m_cache_block_info_array[index] will be evicted. so it is cloned in evict_block_info [ARINDAM]
       if (evict_buff != NULL && m_blocks != NULL)
          memcpy((void*) evict_buff, &m_blocks[index * m_blocksize], m_blocksize);
    }
@@ -119,11 +136,88 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
    }
 
    // FIXME: This is a hack. I dont know if this is the best way to do
-   m_cache_block_info_array[index]->clone(cache_block_info);
+   m_cache_block_info_array[index]->clone(cache_block_info);   //insertion occurs here mainly. cache_block_info is copied into m_cache_block_info_array[index] [ARINDAM]
 
    if (fill_buff != NULL && m_blocks != NULL)
       memcpy(&m_blocks[index * m_blocksize], (void*) fill_buff, m_blocksize);
 }
+
+//////////////////////////////////////////////////////////////
+
+
+
+void
+CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr)
+{
+   // This replacement strategy does not take into account the fact that
+   // cache blocks can be voluntarily flushed or invalidated due to another write request
+   //printf("getReplacementIndex called \n"); //n
+   const UInt32 index = getReplacementIndex(cntlr, 100);
+   
+   assert(index < m_associativity);
+
+   assert(eviction != NULL);
+
+   if (m_cache_block_info_array[index]->isValid())
+   {
+      *eviction = true;
+      // FIXME: This is a hack. I dont know if this is the best way to do
+      evict_block_info->clone(m_cache_block_info_array[index]);   //m_cache_block_info_array[index] will be evicted. so it is cloned in evict_block_info [ARINDAM]
+      if (evict_buff != NULL && m_blocks != NULL)
+         memcpy((void*) evict_buff, &m_blocks[index * m_blocksize], m_blocksize);
+   }
+   else
+   {
+      *eviction = false;
+   }
+
+   // FIXME: This is a hack. I dont know if this is the best way to do
+   m_cache_block_info_array[index]->clone(cache_block_info);   //insertion occurs here mainly. cache_block_info is copied into m_cache_block_info_array[index] [ARINDAM]
+
+   if (fill_buff != NULL && m_blocks != NULL)
+      memcpy(&m_blocks[index * m_blocksize], (void*) fill_buff, m_blocksize);
+}
+
+
+
+///////////////created by Arindam/////////////////////sn
+void
+CacheSet::updateLoopBitSet(IntPtr tag, UInt8 loopbit)
+{
+   UInt32 index=0;
+   UInt32 temp_index=0;
+   int count=0;
+
+   for(UInt32 i=0;i<m_associativity;i++)
+   {
+      if(m_cache_block_info_array[i]->getTag()==tag)
+      {
+         //printf("tag matches at index = %d and tag is  %" PRIxPTR , i,tag);      //sn
+         temp_index=i;
+         count=1;
+      }
+   }
+   /*
+   printf("\n******************\n");     //sn
+
+   for(UInt32 j=0;j<m_associativity;j++)
+   {
+      printf("  %" PRIxPTR , m_cache_block_info_array[j]->getTag());  //sn
+   }
+
+    printf("\n******************\n");     //sn
+   */ 
+
+   if(count==1)
+   {
+      count=0;
+      index=temp_index;
+      //printf("tag match occurs, index is %d, loopbit is %d (printed in updateLoopBitSet)\n", index,loopbit);  //sn
+      updateLoopBitPolicy(index, loopbit);
+   }
+}
+//////////////////////////////////////////////////////
+
 
 char*
 CacheSet::getDataPtr(UInt32 line_index, UInt32 offset)
@@ -146,6 +240,15 @@ CacheSet::createCacheSet(String cfgname, core_id_t core_id,
       case CacheBase::LRU:
       case CacheBase::LRU_QBS:
          return new CacheSetLRU(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
+
+      case CacheBase::LRU_NEW:
+         return new CacheSetLRUNEW(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
+
+      case CacheBase::LRU_L3:
+         return new CacheSetLRUL3(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
+
+      case CacheBase::LRU_L2:
+         return new CacheSetLRUL2(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
 
       case CacheBase::NRU:
          return new CacheSetNRU(cache_type, associativity, blocksize);
@@ -183,6 +286,9 @@ CacheSet::createCacheSetInfo(String name, String cfgname, core_id_t core_id, Str
    {
       case CacheBase::LRU:
       case CacheBase::LRU_QBS:
+      case CacheBase::LRU_NEW:
+      case CacheBase::LRU_L3:
+      case CacheBase::LRU_L2:
       case CacheBase::SRRIP:
       case CacheBase::SRRIP_QBS:
          return new CacheSetInfoLRU(name, cfgname, core_id, associativity, getNumQBSAttempts(policy, cfgname, core_id));
@@ -211,6 +317,12 @@ CacheSet::parsePolicyType(String policy)
       return CacheBase::ROUND_ROBIN;
    if (policy == "lru")
       return CacheBase::LRU;
+   if (policy == "lrunew")
+      return CacheBase::LRU_NEW;
+   if (policy == "lrul3")
+      return CacheBase::LRU_L3;
+   if (policy == "lrul2")
+      return CacheBase::LRU_L2;
    if (policy == "lru_qbs")
       return CacheBase::LRU_QBS;
    if (policy == "nru")

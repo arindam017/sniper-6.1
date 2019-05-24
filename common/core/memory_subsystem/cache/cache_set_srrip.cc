@@ -28,7 +28,7 @@ CacheSetSRRIP::~CacheSetSRRIP()
 }
 
 UInt32
-CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr)
+CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 {
    for (UInt32 i = 0; i < m_associativity; i++)
    {
@@ -96,10 +96,18 @@ CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr)
 }
 
 void
-CacheSetSRRIP::updateReplacementIndex(UInt32 accessed_index)
+CacheSetSRRIP::updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag)
 {
    m_set_info->increment(m_rrip_bits[accessed_index]);
 
    if (m_rrip_bits[accessed_index] > 0)
       m_rrip_bits[accessed_index]--;
 }
+
+////////////created by Arindam//////////////////sn
+void
+CacheSetSRRIP::updateLoopBitPolicy(UInt32 index, UInt8 loopbit)
+{
+  
+}
+//////////////////////////////////////////////////

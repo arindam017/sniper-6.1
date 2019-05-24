@@ -43,6 +43,7 @@
  /home/arindam/Desktop/Sniper/sniper-6.1/common/system/cache_efficiency_tracker.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_block_info.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/system/inst_mode.h \
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/memory_manager_base.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/network/network.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/network/packet_type.h \
@@ -61,5 +62,4 @@
  /home/arindam/Desktop/Sniper/sniper-6.1/common/config/key.hpp \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/config/section.hpp \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/config/config_exceptions.hpp \
- /home/arindam/Desktop/Sniper/sniper-6.1/common/performance_model/queue_model.h \
- /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h)
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/performance_model/queue_model.h)

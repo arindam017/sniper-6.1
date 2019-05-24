@@ -1,0 +1,182 @@
+#include "cache_set_lru_l2.h"
+#include "log.h"
+#include "stats.h"
+
+extern IntPtr global_tag;
+extern IntPtr global_address;
+extern UInt8 flag_for_no_next_cache_cntlr; //1 for shared block, 2 for dram access, 3 for others
+
+extern UInt8 dram_access_flag;
+extern UInt8 dram_access_flag2;  // defined in cache_set_lru
+//UInt16 tag_16 =0;
+//UInt16 ip_16  =0;
+
+
+
+//printf("Instruction Pointer in cache set lru: %" PRIxPTR "\n", global_address);
+//printf("tag in cache set lru: %" PRIxPTR "\n", global_tag);
+
+// Implements LRU replacement, optionally augmented with Query-Based Selection [Jaleel et al., MICRO'10]
+
+
+CacheSetLRUL2::CacheSetLRUL2(
+      CacheBase::cache_t cache_type,
+      UInt32 associativity, UInt32 blocksize, CacheSetInfoLRU* set_info, UInt8 num_attempts)
+   : CacheSet(cache_type, associativity, blocksize)
+   , m_num_attempts(num_attempts)
+   , m_set_info(set_info)
+{
+   //printf("haha_constructor \n");
+   //printf("L2 access (printed in cache_set_lru_2) \n");
+   m_lru_bits = new UInt8[m_associativity];
+   for (UInt32 i = 0; i < m_associativity; i++)
+      m_lru_bits[i] = i;
+   
+}
+
+CacheSetLRUL2::~CacheSetLRUL2()
+{
+   delete [] m_lru_bits;
+}
+
+
+
+UInt32
+CacheSetLRUL2::getReplacementIndex(CacheCntlr *cntlr)
+{
+   // First try to find an invalid block
+
+  // tag_16 = global_tag;
+   //ip_16 = global_address;
+   //printf("haha_getReplacementIndex \n");
+   //printf("Instruction Pointer in cache set lru: %" PRIxPTR "\n", global_address);
+   //printf("tag in cache set lru: %" PRIxPTR "\n", global_tag);
+   //printf("Instruction Pointer in cache set lru (truncated): %d \n", ip_16);
+   //printf("tag in cache set lru (truncated): %d \n", tag_16);
+   printf("getReplacementIndex of lru_l2 called \n");
+
+   //printf("Value of dram_access_flag(1) is %d \n", dram_access_flag2 );
+
+/*
+   if(dram_access_flag==1)
+      printf("dram access (printed in cache_set_lru_l2) \n");
+   else if(dram_access_flag==0)
+      printf("from L3 (printed in cache_set_lru_l2)\n");
+   else
+      printf("error: dram_access_flag is %d \n", dram_access_flag);
+*/
+   //dram_access_flag2=0;
+   //dram_access_flag=0;
+   if(flag_for_no_next_cache_cntlr==1)
+      printf("**************************write on a shared block (printed in lru_l2)************************************ \n");
+   else if(flag_for_no_next_cache_cntlr==1)
+      printf("**************************dram access (printed in lru_l2)************************************************ \n");
+   else if(flag_for_no_next_cache_cntlr==3)
+      printf("**************************initiateDirectoryAccess (printed in lru_l2)************************************ \n");
+   else
+      printf("*********************error, flag_for_no_next_cache_cntlr is %d (printed in lru_l2) ************************\n", flag_for_no_next_cache_cntlr);
+
+   for (UInt32 i = 0; i < m_associativity; i++)
+   {
+      if (!m_cache_block_info_array[i]->isValid())
+      {
+         // Mark our newly-inserted line as most-recently used
+         moveToMRU(i);
+         m_cache_block_info_array[i]->invalidate();
+         return i;
+      }
+   }
+
+   // Make m_num_attemps attempts at evicting the block at LRU position
+   for(UInt8 attempt = 0; attempt < m_num_attempts; ++attempt)
+   {
+      UInt32 index = 0;
+      UInt8 max_bits = 0;
+      for (UInt32 i = 0; i < m_associativity; i++)
+      {
+         if (m_lru_bits[i] > max_bits && isValidReplacement(i))
+         {
+            index = i;
+            max_bits = m_lru_bits[i];
+         }
+      }
+      LOG_ASSERT_ERROR(index < m_associativity, "Error Finding LRU bits");
+
+      bool qbs_reject = false;
+      if (attempt < m_num_attempts - 1)
+      {
+         LOG_ASSERT_ERROR(cntlr != NULL, "CacheCntlr == NULL, QBS can only be used when cntlr is passed in");
+         qbs_reject = cntlr->isInLowerLevelCache(m_cache_block_info_array[index]);
+      }
+
+      if (qbs_reject)
+      {
+         // Block is contained in lower-level cache, and we have more tries remaining.
+         // Move this block to MRU and try again
+         moveToMRU(index);
+         m_cache_block_info_array[index]->invalidate();
+         cntlr->incrementQBSLookupCost();
+         continue;
+      }
+      else
+      {
+         // Mark our newly-inserted line as most-recently used
+         moveToMRU(index);
+         m_cache_block_info_array[index]->invalidate();
+         m_set_info->incrementAttempt(attempt);
+         return index;
+      }
+   }
+
+   printf("dram_access_flag at the end of getReplacementIndex of L2 is %d \n",dram_access_flag);
+   LOG_PRINT_ERROR("Should not reach here");
+   
+}
+
+void
+CacheSetLRUL2::updateReplacementIndex(UInt32 accessed_index, UInt32 write_flag)
+{
+   printf("updateReplacementIndex of lru_l2 called\n");
+   m_set_info->increment(m_lru_bits[accessed_index]);
+   moveToMRU(accessed_index);
+}
+
+void
+CacheSetLRUL2::moveToMRU(UInt32 accessed_index)
+{
+   for (UInt32 i = 0; i < m_associativity; i++)
+   {
+      if (m_lru_bits[i] < m_lru_bits[accessed_index])
+         m_lru_bits[i] ++;
+   }
+   m_lru_bits[accessed_index] = 0;
+}
+/*
+CacheSetInfoLRU::CacheSetInfoLRU(String name, String cfgname, core_id_t core_id, UInt32 associativity, UInt8 num_attempts)
+   : m_associativity(associativity)
+   , m_attempts(NULL)
+{
+   m_access = new UInt64[m_associativity];
+   for(UInt32 i = 0; i < m_associativity; ++i)
+   {
+      m_access[i] = 0;
+      registerStatsMetric(name, core_id, String("access-mru-")+itostr(i), &m_access[i]);
+   }
+
+   if (num_attempts > 1)
+   {
+      m_attempts = new UInt64[num_attempts];
+      for(UInt32 i = 0; i < num_attempts; ++i)
+      {
+         m_attempts[i] = 0;
+         registerStatsMetric(name, core_id, String("qbs-attempt-")+itostr(i), &m_attempts[i]);
+      }
+   }
+};
+
+CacheSetInfoLRU::~CacheSetInfoLRU()
+{
+   delete [] m_access;
+   if (m_attempts)
+      delete [] m_attempts;
+}*/

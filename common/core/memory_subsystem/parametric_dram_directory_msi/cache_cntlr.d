@@ -42,6 +42,7 @@
  /home/arindam/Desktop/Sniper/sniper-6.1/common/system/cache_efficiency_tracker.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_block_info.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/system/inst_mode.h \
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/parametric_dram_directory_msi/memory_manager.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/memory_manager_base.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/network/network.h \
@@ -80,5 +81,4 @@
  /home/arindam/Desktop/Sniper/sniper-6.1/common/system/hooks_manager.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/system/thread_manager.h \
  /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/parametric_dram_directory_msi/cache_atd.h \
- /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set.h \
- /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h)
+ /home/arindam/Desktop/Sniper/sniper-6.1/common/core/memory_subsystem/cache/cache_set.h)

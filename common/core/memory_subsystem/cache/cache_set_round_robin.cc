@@ -12,19 +12,27 @@ CacheSetRoundRobin::~CacheSetRoundRobin()
 {}
 
 UInt32
-CacheSetRoundRobin::getReplacementIndex(CacheCntlr *cntlr)
+CacheSetRoundRobin::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 {
    UInt32 curr_replacement_index = m_replacement_index;
    m_replacement_index = (m_replacement_index == 0) ? (m_associativity-1) : (m_replacement_index-1);
 
    if (!isValidReplacement(m_replacement_index))
-      return getReplacementIndex(cntlr);
+      return getReplacementIndex(cntlr, 100);
    else
       return curr_replacement_index;
 }
 
 void
-CacheSetRoundRobin::updateReplacementIndex(UInt32 accessed_index)
+CacheSetRoundRobin::updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag)
 {
    return;
 }
+
+////////////created by Arindam//////////////////sn
+void
+CacheSetRoundRobin::updateLoopBitPolicy(UInt32 index, UInt8 loopbit)
+{
+  
+}
+//////////////////////////////////////////////////

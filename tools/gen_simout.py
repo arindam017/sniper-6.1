@@ -60,11 +60,11 @@ def generate_simout(jobid = None, resultsdir = None, partial = None, output = sy
     results['performance_model.idle_elapsed_time'][c] / float(time0)
     for c in range(ncores)
   ]
-
+  
   template = [
     ('  Instructions', 'performance_model.instruction_count', str),
     ('  Cycles',       'performance_model.cycle_count_fixed', format_int),
-    ('  IPC',          'performance_model.ipc', format_float(2)),
+    ('  IPC',          'performance_model.ipc', format_float(3)),
     ('  Time (ns)',    'performance_model.elapsed_time_fixed', format_ns(0)),
     ('  Idle time (ns)', 'performance_model.idle_elapsed_time', format_ns(0)),
     ('  Idle time (%)',  'performance_model.idle_elapsed_percent', format_pct),
@@ -117,6 +117,21 @@ def generate_simout(jobid = None, resultsdir = None, partial = None, output = sy
       ('    mpki', '%s.mpki'%c, lambda v: '%.2f' % v),
     ])
 
+
+  results['L3.NumberOfL3WriteFromDirectory'] = [results['L3.NumberOfL3WriteFromDirectory'][c]	//sn anushree
+    for c in range(ncores)
+  ]
+
+  results['L3.NumberOfL3WriteFromL2'] = [results['L3.NumberOfL3WriteFromL2'][c]	//sn anushree
+    for c in range(ncores)
+  ]
+
+  template.extend([
+  ('  L3NumberOfL3WritesFromL2', 'L3.NumberOfL3WriteFromL2', str),
+  ('  L3NumberOfL3WritesFromDirectory', 'L3.NumberOfL3WriteFromDirectory', str),
+  ])
+
+
   allcaches = [ 'nuca-cache', 'dram-cache' ]
   existcaches = [ c for c in allcaches if '%s.reads'%c in results ]
   for c in existcaches:
@@ -133,7 +148,7 @@ def generate_simout(jobid = None, resultsdir = None, partial = None, output = sy
       ('    miss rate', '%s.missrate'%c, lambda v: '%.2f%%' % v),
       ('    mpki', '%s.mpki'%c, lambda v: '%.2f' % v),
     ])
-
+    
   results['dram.accesses'] = map(sum, zip(results['dram.reads'], results['dram.writes']))
   results['dram.avglatency'] = map(lambda (a,b): a/b if b else float('inf'), zip(results['dram.total-access-latency'], results['dram.accesses']))
   template += [
@@ -218,3 +233,4 @@ if __name__ == '__main__':
     sys.exit(-1)
 
   generate_simout(jobid = jobid, resultsdir = resultsdir, partial = partial)
+

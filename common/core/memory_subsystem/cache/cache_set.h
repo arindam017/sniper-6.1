@@ -50,14 +50,17 @@ class CacheSet
       CacheBlockInfo* find(IntPtr tag, UInt32* line_index = NULL);
       bool invalidate(IntPtr& tag);
       void insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr = NULL);
+      void insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr = NULL, UInt8 write_flag=100);  //sn added by arindam
+      void updateLoopBitSet(IntPtr tag, UInt8 loopbit); //sn
 
       CacheBlockInfo* peekBlock(UInt32 way) const { return m_cache_block_info_array[way]; }
 
       char* getDataPtr(UInt32 line_index, UInt32 offset = 0);
       UInt32 getBlockSize(void) const { return m_blocksize; }
 
-      virtual UInt32 getReplacementIndex(CacheCntlr *cntlr) = 0;
-      virtual void updateReplacementIndex(UInt32) = 0;
+      virtual UInt32 getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag) = 0;
+      virtual void updateReplacementIndex(UInt32, UInt8) = 0;
+      virtual void updateLoopBitPolicy(UInt32, UInt8) = 0; //sn
 
       bool isValidReplacement(UInt32 index);
 };
