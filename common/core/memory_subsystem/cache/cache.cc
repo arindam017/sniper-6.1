@@ -200,3 +200,18 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_hits += hits;
    }
 }
+
+UInt32
+Cache::getBlockIndex(IntPtr addr)   //sn copied from anushree
+{
+    IntPtr tag;
+    UInt32 set_index;
+    UInt32 blockIndex;
+
+    splitAddress(addr, tag, set_index);
+
+    // CacheBlockInfo* cache_block_info = CacheBlockInfo::create(m_cache_type);
+    blockIndex = m_sets[set_index]->getBlockIndexForGivenTag(tag);
+
+    return blockIndex;
+}

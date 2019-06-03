@@ -63,6 +63,9 @@ class CacheSet
       virtual void updateLoopBitPolicy(UInt32, UInt8) = 0; //sn
 
       bool isValidReplacement(UInt32 index);
+
+      /* Returns the index of the block which can be evicted */  
+      UInt32 getBlockIndexForGivenTag(IntPtr tagToFind); //sn copied from anushree
 };
 
 #endif /* CACHE_SET_H */

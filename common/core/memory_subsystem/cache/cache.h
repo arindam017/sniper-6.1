@@ -67,6 +67,10 @@ class Cache : public CacheBase
       void updateCounters(bool cache_hit);
       void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
+      /* Calls the cache_set to get index of the block specified
+       * by the addr */ 
+      UInt32 getBlockIndex(IntPtr addr);  //sn copied from anushree
+
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
 };
