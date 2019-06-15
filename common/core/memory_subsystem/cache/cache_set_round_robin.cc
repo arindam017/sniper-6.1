@@ -12,13 +12,13 @@ CacheSetRoundRobin::~CacheSetRoundRobin()
 {}
 
 UInt32
-CacheSetRoundRobin::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetRoundRobin::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    UInt32 curr_replacement_index = m_replacement_index;
    m_replacement_index = (m_replacement_index == 0) ? (m_associativity-1) : (m_replacement_index-1);
 
    if (!isValidReplacement(m_replacement_index))
-      return getReplacementIndex(cntlr, 100);
+      return getReplacementIndex(cntlr, 100, 0);
    else
       return curr_replacement_index;
 }

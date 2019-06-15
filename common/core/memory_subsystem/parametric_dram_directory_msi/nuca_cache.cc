@@ -101,7 +101,7 @@ NucaCache::write(IntPtr address, Byte* data_buf, bool& eviction, IntPtr& evict_a
 
       m_cache->insertSingleLine(address, data_buf,
          &eviction, &evict_address, &evict_block_info, evict_buf,
-         now + latency, 0, 100); //nss
+         now + latency, 0, 100, 0); //nss
 
       if (eviction)
       {

@@ -28,7 +28,7 @@ CacheSetSRRIP::~CacheSetSRRIP()
 }
 
 UInt32
-CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    for (UInt32 i = 0; i < m_associativity; i++)
    {

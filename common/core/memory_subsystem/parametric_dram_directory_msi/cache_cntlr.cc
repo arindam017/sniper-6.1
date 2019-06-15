@@ -12,10 +12,18 @@
 
 #include <cstring>
 
+IntPtr eip_global;
 UInt8 l3_hit_flag; //flagset
 static UInt64 g_NumberOfL3WritesDueToWriteBack; //nss
 static UInt64 g_NumberOfL3WritesFromDirectory; //nss
 extern UInt8 global_loop_bit_writeback; //nss; This is the loop bit to be written back from L2 to L3
+//UInt8 m_state[256];
+
+//for(UInt16 i = 0; i < 256; i++)
+//{
+   //printf("i is %d \n",i);
+//   m_state[i] = 0;   
+//}
 
 #define STARTING_WAY_TO_SRAM    0
 #define ENDING_WAY_TO_SRAM    3
@@ -334,8 +342,12 @@ CacheCntlr::processMemOpFromCore(
       IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length,
       bool modeled,
-      bool count)
+      bool count,
+      IntPtr eip) //sn eip(PC) added by arindam
 {
+
+   //printf("processMemOpFromCore is called and eip is: %" PRIxPTR "\n", eip);  //ssn
+
    HitWhere::where_t hit_where = HitWhere::MISS;
 
    // Protect against concurrent access from sibling SMT threads
@@ -343,10 +355,10 @@ CacheCntlr::processMemOpFromCore(
 
    LOG_PRINT("processMemOpFromCore(), lock_signal(%u), mem_op_type(%u), ca_address(0x%x)",
              lock_signal, mem_op_type, ca_address);
-MYLOG("----------------------------------------------");
-MYLOG("%c%c %lx+%u..+%u", mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type == Core::READ_EX ? 'X' : ' ', ca_address, offset, data_length);
-LOG_ASSERT_ERROR((ca_address & (getCacheBlockSize() - 1)) == 0, "address at cache line + %x", ca_address & (getCacheBlockSize() - 1));
-LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u > %u", offset + data_length, getCacheBlockSize());
+   MYLOG("----------------------------------------------");
+   MYLOG("%c%c %lx+%u..+%u", mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type == Core::READ_EX ? 'X' : ' ', ca_address, offset, data_length);
+   LOG_ASSERT_ERROR((ca_address & (getCacheBlockSize() - 1)) == 0, "address at cache line + %x", ca_address & (getCacheBlockSize() - 1));
+   LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u > %u", offset + data_length, getCacheBlockSize());
 
    #ifdef PRIVATE_L2_OPTIMIZATION
    /* if this is the second part of an atomic operation: we already have the lock, don't lock again */
@@ -382,7 +394,8 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
          cache_block_info->setCState(CacheState::MODIFIED);
       else
       {
-         insertCacheBlock(ca_address, mem_op_type == Core::READ ? CacheState::SHARED : CacheState::MODIFIED, NULL, m_core_id, ShmemPerfModel::_USER_THREAD, 100); //sn garbage value 100 passed
+         //printf("insertCacheBlock called in line 389 \n");  //ssn
+         insertCacheBlock(ca_address, mem_op_type == Core::READ ? CacheState::SHARED : CacheState::MODIFIED, NULL, m_core_id, ShmemPerfModel::_USER_THREAD, 100, 0); //sn garbage value 100 and 0 passed
          cache_block_info = getCacheBlockInfo(ca_address);
       }
    }
@@ -492,7 +505,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       MYLOG("processMemOpFromCore l%d before next", m_mem_component);
       l3_hit_flag=0;
       //printf("l3_hit_flag is set to 0 \n");  //sn
-      hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, Prefetch::NONE, t_start, false);
+      hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, Prefetch::NONE, t_start, false, eip);  //sn eip(PC) added by arindam
       bool next_cache_hit = hit_where != HitWhere::MISS;
       MYLOG("processMemOpFromCore l%d next hit = %d", m_mem_component, next_cache_hit);
 
@@ -522,7 +535,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
 
          /* have the next cache levels fill themselves with the new data */
          MYLOG("processMemOpFromCore l%d before next fill", m_mem_component);
-         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, false, false, Prefetch::NONE, t_start, true);
+         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, false, false, Prefetch::NONE, t_start, true, eip);  //sn eip(PC) added by arindam
          MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
          LOG_ASSERT_ERROR(hit_where != HitWhere::MISS,
             "Tried to read in next-level cache, but data is already gone");
@@ -676,7 +689,8 @@ CacheCntlr::copyDataFromNextLevel(Core::mem_op_t mem_op_type, IntPtr address, bo
    else
    {
       // Insert the Cache Block in our own cache
-      insertCacheBlock(address, cstate, data_buf, m_core_id, ShmemPerfModel::_USER_THREAD, flag);
+      //printf("insertCacheBlock called in line 684 \n");  //ssn
+      insertCacheBlock(address, cstate, data_buf, m_core_id, ShmemPerfModel::_USER_THREAD, flag, 0);  //sn last 0 is garbage
       MYLOG("copyDataFromNextLevel l%d done (inserted)", m_mem_component);
    }
 }
@@ -753,7 +767,7 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
    MYLOG("prefetching %lx", prefetch_address);
    SubsecondTime t_before = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);
    getShmemPerfModel()->setElapsedTime(ShmemPerfModel::_USER_THREAD, t_start); // Start the prefetch at the same time as the original miss
-   HitWhere::where_t hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, true, true, Prefetch::OWN, t_start, false);
+   HitWhere::where_t hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, true, true, Prefetch::OWN, t_start, false, 0);   //sn last argument (0) is actually a garbage value of PC
 
    if (hit_where == HitWhere::MISS)
    {
@@ -763,7 +777,7 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
       waitForNetworkThread();
       wakeUpNetworkThread();
 
-      hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, false, false, Prefetch::OWN, t_start, false);
+      hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, false, false, Prefetch::OWN, t_start, false, 0); //sn last argument (0) is actually a garbage value of PC
 
       LOG_ASSERT_ERROR(hit_where != HitWhere::MISS, "Line was not there after prefetch");
    }
@@ -778,9 +792,10 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
  *****************************************************************************/
 
 HitWhere::where_t
-CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock)
+CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock, IntPtr eip)   //sn eip added by arindam
 {
    //printf("%d calls processShmemReqFromPrevCache \n", m_mem_component); //n
+   //printf("processShmemReqFromPrevCache is called and eip is: %" PRIxPTR "\n", eip);  //ssn
 
    #ifdef PRIVATE_L2_OPTIMIZATION
    bool have_write_lock_internal = have_write_lock;
@@ -805,7 +820,10 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
       if (cache_block_info)
          cache_block_info->setCState(CacheState::MODIFIED);
       else
-         cache_block_info = insertCacheBlock(address, mem_op_type == Core::READ ? CacheState::SHARED : CacheState::MODIFIED, NULL, m_core_id, ShmemPerfModel::_USER_THREAD, 100);
+      {
+         //printf("insertCacheBlock called in line 816 \n");  //ssn
+         cache_block_info = insertCacheBlock(address, mem_op_type == Core::READ ? CacheState::SHARED : CacheState::MODIFIED, NULL, m_core_id, ShmemPerfModel::_USER_THREAD, 100, eip); //sn eip(PC) added by arindam
+      }
    }
    else if (cache_hit && m_passthrough && count)
    {
@@ -986,7 +1004,7 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
             invalidateCacheBlock(address);
 
          // let the next cache level handle it.
-         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, address, modeled, count, isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal);
+         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, address, modeled, count, isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal, eip);   //sn eip(PC) added by Arindam
          if (hit_where != HitWhere::MISS)
          {
             cache_hit = true;
@@ -1044,7 +1062,8 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
                getMemoryManager()->incrElapsedTime(latency, ShmemPerfModel::_USER_THREAD);
 
                // Insert the line. Be sure to use SHARED/MODIFIED as appropriate (upgrades are free anyway), we don't want to have to write back clean lines
-               insertCacheBlock(address, mem_op_type == Core::READ ? CacheState::SHARED : CacheState::MODIFIED, data_buf, m_core_id, ShmemPerfModel::_USER_THREAD, 100);
+               //printf("insertCacheBlock called in line 1057 \n");  //ssn
+               insertCacheBlock(address, mem_op_type == Core::READ ? CacheState::SHARED : CacheState::MODIFIED, data_buf, m_core_id, ShmemPerfModel::_USER_THREAD, 100, eip); //sn eip(PC) added by arindam
                if (isPrefetch != Prefetch::NONE)
                   getCacheBlockInfo(address)->setOption(CacheBlockInfo::PREFETCH);
 
@@ -1054,6 +1073,7 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
          else
          {
             //printf("initiateDirectoryAccess \n"); //n
+            eip_global=eip;   //sn global created
             initiateDirectoryAccess(mem_op_type, address, isPrefetch != Prefetch::NONE, t_issue);
          }
       }
@@ -1435,9 +1455,12 @@ CacheCntlr::updateLoopBitCntlr(IntPtr address, UInt8 loopbit)
 /////////////////////////////////////////////////////////////
 
 SharedCacheBlockInfo*
-CacheCntlr::insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* data_buf, core_id_t requester, ShmemPerfModel::Thread_t thread_num, UInt8 write_flag)   //sn last argument added by arindam
+CacheCntlr::insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* data_buf, core_id_t requester, ShmemPerfModel::Thread_t thread_num, UInt8 write_flag, IntPtr eip)   //sn last two arguments added by arindam. eip is PC
 {
    //printf("l3_hit_flag is %d in insertCacheBlock called by %d \n", write_flag, m_mem_component);   //sn
+
+   //printf("insertCacheBlock is called and eip is: %" PRIxPTR "\n", eip);  //ssn
+
    if(m_mem_component==5)  //nss
    {
       g_NumberOfL3WritesFromDirectory++;  //nss
@@ -1463,7 +1486,7 @@ CacheCntlr::insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* 
 
 	m_master->m_cache->insertSingleLine(address, data_buf,
          &eviction, &evict_address, &evict_block_info, evict_buf,
-         getShmemPerfModel()->getElapsedTime(thread_num), this, m_mem_component, write_flag); //nss
+         getShmemPerfModel()->getElapsedTime(thread_num), this, m_mem_component, write_flag, eip); //nss eip(PC) added by arindam
 
    if(m_mem_component==4)  //sn
    {
@@ -2011,7 +2034,10 @@ MYLOG("processExRepFromDramDirectory l%d", m_mem_component);
    IntPtr address = shmem_msg->getAddress();
    Byte* data_buf = shmem_msg->getDataBuf();
 
-   insertCacheBlock(address, CacheState::EXCLUSIVE, data_buf, requester, ShmemPerfModel::_SIM_THREAD, 100);
+   //printf("insertCacheBlock called in line 2028 \n");  //ssn
+   insertCacheBlock(address, CacheState::EXCLUSIVE, data_buf, requester, ShmemPerfModel::_SIM_THREAD, 100, eip_global);
+   eip_global=0; //sn reset eip global to 0
+
 MYLOG("processExRepFromDramDirectory l%d end", m_mem_component);
 }
 
@@ -2026,7 +2052,8 @@ MYLOG("processShRepFromDramDirectory l%d", m_mem_component);
    Byte* data_buf = shmem_msg->getDataBuf();
 
    // Insert Cache Block in L2 Cache
-   insertCacheBlock(address, CacheState::SHARED, data_buf, requester, ShmemPerfModel::_SIM_THREAD, 100);
+   //printf("insertCacheBlock called in line 2044 \n");  //ssn
+   insertCacheBlock(address, CacheState::SHARED, data_buf, requester, ShmemPerfModel::_SIM_THREAD, 100, 0);
 }
 
 void

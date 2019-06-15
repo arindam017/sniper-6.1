@@ -19,7 +19,7 @@ CacheSetPLRU::~CacheSetPLRU()
 }
 
 UInt32
-CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    // Invalidations may mess up the LRU bits
 
@@ -27,7 +27,7 @@ CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
-         updateReplacementIndex(i,0);
+         updateReplacementIndex(i,100);
          return i;
       }
    }
@@ -82,7 +82,7 @@ CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
 
 
    LOG_ASSERT_ERROR(isValidReplacement(retValue), "PLRU selected an invalid replacement candidate" );
-   updateReplacementIndex(retValue,0);
+   updateReplacementIndex(retValue,100);
    return retValue;
 
 }

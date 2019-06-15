@@ -60,7 +60,8 @@ class CacheBase
          NUM_REPLACEMENT_POLICIES,
          LRU_NEW,
          LRU_L3,
-         LRU_L2
+         LRU_L2,
+         PHC
       };
 
    protected:

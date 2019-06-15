@@ -125,18 +125,18 @@ void
 Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       bool* eviction, IntPtr* evict_addr,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
-      SubsecondTime now, CacheCntlr *cntlr, int mcomponent, UInt8 write_flag) //nss; int mcomponent and write_flag argument has been added by ARINDAM. Remove if necessary
+      SubsecondTime now, CacheCntlr *cntlr, int mcomponent, UInt8 write_flag, IntPtr eip) //nss; int mcomponent and write_flag and eip argument has been added by ARINDAM. Remove if necessary
 {
    IntPtr tag;
    UInt32 set_index;
    splitAddress(addr, tag, set_index);  
    
-
+   //printf("set_index is %d \n", set_index);
    CacheBlockInfo* cache_block_info = CacheBlockInfo::create(m_cache_type);
    cache_block_info->setTag(tag);
 
    m_sets[set_index]->insert2(cache_block_info, fill_buff,  //sn insert2 function is insert with additional argument
-         eviction, evict_block_info, evict_buff, cntlr, write_flag); //cache_block_info is inserted in required place, and the block which is evicted is copied in evict_block_info [ARINDAM], also write_flag added
+         eviction, evict_block_info, evict_buff, cntlr, write_flag, eip); //cache_block_info is inserted in required place, and the block which is evicted is copied in evict_block_info [ARINDAM], also write_flag and eip added
    *evict_addr = tagToAddress(evict_block_info->getTag()); //evict_addr is the address of the block which was evicted due to insert [ARINDAM]
 
    if (m_fault_injector) {

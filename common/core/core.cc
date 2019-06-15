@@ -281,6 +281,7 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       IntPtr eip,
       SubsecondTime now)
 {
+   //printf("initiateMemoryAccess is called and eip is: %" PRIxPTR "\n", eip);  //ssn
    MYLOG("access %lx+%u %c%c modeled(%s)", address, data_size, mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type == Core::READ_EX ? 'X' : ' ', ModeledString(modeled));
 
    if (data_size <= 0)
@@ -295,7 +296,7 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
    if (lock_signal != Core::UNLOCK)
       m_mem_lock.acquire();
 
-#if 0
+   #if 0
    static int i = 0;
    static Lock iolock;
    if ((i++) % 1000 == 0) {
@@ -308,7 +309,7 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
           printf(",,,");
       printf("\n");
    }
-#endif
+   #endif
 
    getShmemPerfModel()->setElapsedTime(ShmemPerfModel::_USER_THREAD, initial_time);
 
@@ -362,13 +363,16 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       if (m_cheetah_manager)
          m_cheetah_manager->access(mem_op_type, curr_addr_aligned);
 
+
+
       HitWhere::where_t this_hit_where = getMemoryManager()->coreInitiateMemoryAccess(
                mem_component,
                lock_signal,
                mem_op_type,
                curr_addr_aligned, curr_offset,
                data_buf ? curr_data_buffer_head : NULL, curr_size,
-               modeled);
+               modeled,
+               eip); //sn last argument added by arindam. it is the PC 
 
       if (hit_where != (HitWhere::where_t)mem_component)
       {
@@ -409,12 +413,12 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
 
    switch(modeled)
    {
-#if 0
+   #if 0
       case MEM_MODELED_DYNINFO:
       {
          DynamicInstructionInfo info = DynamicInstructionInfo::createMemoryInfo(eip, true, shmem_time, address, data_size, (mem_op_type == WRITE) ? Operand::WRITE : Operand::READ, num_misses, hit_where);
             m_performance_model->pushDynamicInstructionInfo(info);
-#endif
+   #endif
 
       case MEM_MODELED_TIME:
       case MEM_MODELED_FENCED:

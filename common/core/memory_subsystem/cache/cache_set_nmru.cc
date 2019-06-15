@@ -21,7 +21,7 @@ CacheSetNMRU::~CacheSetNMRU()
 }
 
 UInt32
-CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    // Invalidations may mess up the LRU bits
 
@@ -29,7 +29,7 @@ CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
-         updateReplacementIndex(i,0);
+         updateReplacementIndex(i,100);
          return i;
       }
    }
@@ -41,7 +41,7 @@ CacheSetNMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
          // We choose the first line that is not MRU as the victim (note that we start searching from the replacement pointer position)
          UInt8 index = m_replacement_pointer;
          m_replacement_pointer = (m_replacement_pointer + 1) % m_associativity;
-         updateReplacementIndex(index,0);
+         updateReplacementIndex(index,100);
          return index;
       }
 

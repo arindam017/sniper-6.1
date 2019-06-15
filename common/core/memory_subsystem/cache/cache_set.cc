@@ -1,6 +1,7 @@
 #include "cache_set.h"
 #include "cache_set_lru.h"
 #include "cache_set_lru_new.h"
+#include "cache_set_phc.h"
 #include "cache_set_lru_l3.h"
 #include "cache_set_lru_l2.h"
 #include "cache_set_mru.h"
@@ -110,13 +111,14 @@ CacheSet::invalidate(IntPtr& tag)
 
 /////////////////created by arindam///////////////////////////
 void
-CacheSet::insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr, UInt8 write_flag) //sn insert2 function is insert with additional argument
+CacheSet::insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr, UInt8 write_flag, IntPtr eip) //sn insert2 function is insert with additional argument
 {
    // This replacement strategy does not take into account the fact that
    // cache blocks can be voluntarily flushed or invalidated due to another write request
    //printf("getReplacementIndex called \n"); //n
    //printf("flag is %d inside insert2 \n", write_flag);   //sn
-   const UInt32 index = getReplacementIndex(cntlr, write_flag);
+   //printf("insert2 is called and eip is %" PRIxPTR "\n", eip); //sn
+   const UInt32 index = getReplacementIndex(cntlr, write_flag, eip);
    
    assert(index < m_associativity);
 
@@ -152,7 +154,7 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
    // This replacement strategy does not take into account the fact that
    // cache blocks can be voluntarily flushed or invalidated due to another write request
    //printf("getReplacementIndex called \n"); //n
-   const UInt32 index = getReplacementIndex(cntlr, 100);
+   const UInt32 index = getReplacementIndex(cntlr, 100, 0);
    
    assert(index < m_associativity);
 
@@ -244,6 +246,9 @@ CacheSet::createCacheSet(String cfgname, core_id_t core_id,
       case CacheBase::LRU_NEW:
          return new CacheSetLRUNEW(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
 
+      case CacheBase::PHC:
+         return new CacheSetPHC(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
+
       case CacheBase::LRU_L3:
          return new CacheSetLRUL3(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
 
@@ -289,6 +294,7 @@ CacheSet::createCacheSetInfo(String name, String cfgname, core_id_t core_id, Str
       case CacheBase::LRU_NEW:
       case CacheBase::LRU_L3:
       case CacheBase::LRU_L2:
+      case CacheBase::PHC:
       case CacheBase::SRRIP:
       case CacheBase::SRRIP_QBS:
          return new CacheSetInfoLRU(name, cfgname, core_id, associativity, getNumQBSAttempts(policy, cfgname, core_id));
@@ -319,6 +325,8 @@ CacheSet::parsePolicyType(String policy)
       return CacheBase::LRU;
    if (policy == "lrunew")
       return CacheBase::LRU_NEW;
+   if (policy == "phc")
+      return CacheBase::PHC;
    if (policy == "lrul3")
       return CacheBase::LRU_L3;
    if (policy == "lrul2")

@@ -22,7 +22,7 @@ CacheSetLRUNEW::~CacheSetLRUNEW()
 }
 
 UInt32
-CacheSetLRUNEW::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetLRUNEW::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    // First try to find an invalid block
    for (UInt32 i = 0; i < m_associativity; i++)

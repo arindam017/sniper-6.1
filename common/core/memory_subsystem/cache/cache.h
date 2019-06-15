@@ -57,7 +57,7 @@ class Cache : public CacheBase
             access_t access_type, Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement);
       void insertSingleLine(IntPtr addr, Byte* fill_buff,
             bool* eviction, IntPtr* evict_addr,
-            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL, int mcomponent=0, UInt8 write_flag=100); //nss; int mcomponent argument has been added by ARINDAM.
+            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL, int mcomponent=0, UInt8 write_flag=100, IntPtr eip=0); //nss; int mcomponent, write_flag and eip argument has been added by ARINDAM.
       void updateLoopBitCache(IntPtr addr, UInt8 loopbit); //sn
       CacheBlockInfo* peekSingleLine(IntPtr addr);
 

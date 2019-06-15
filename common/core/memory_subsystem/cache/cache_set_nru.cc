@@ -22,7 +22,7 @@ CacheSetNRU::~CacheSetNRU()
 }
 
 UInt32
-CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    // Invalidations may mess up the LRU bits
 
@@ -34,7 +34,7 @@ CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
       {
          // If there is an invalid line(s) in the set, regardless of the LRU bits of other lines, we choose the first invalid line to replace
          // Mark our newly-inserted line as recently used
-         updateReplacementIndex(i,0);
+         updateReplacementIndex(i,100);
          return i;
       }
       else if (m_lru_bits[i] == 0 && isValidReplacement(i))
@@ -55,7 +55,7 @@ CacheSetNRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
          m_replacement_pointer = (m_replacement_pointer + 1) % m_associativity;
 
          // Mark our newly-inserted line as recently used
-         updateReplacementIndex(index,0);
+         updateReplacementIndex(index,100);
          return index;
       }
 

@@ -33,7 +33,7 @@ CacheSetLRUL3::~CacheSetLRUL3()
 
 
 UInt32
-CacheSetLRUL3::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetLRUL3::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
   // For victim selection in case of L3 miss, the priority is as follows [ARINDAM]
   // invalid blocks
@@ -175,7 +175,9 @@ void
 CacheSetLRUL3::updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag)
 {
    //printf("updateReplacementIndex for L3 called \n"); //nss
-   //printf("loop_bit_write_back_flag is %d \n", loop_bit_write_back_flag); //nss
+   //printf("write flag is %d \n", write_flag); //nss
+   if(write_flag==1)
+    printf("write_flag in l3 is 1 \n");
    m_set_info->increment(m_lru_bits[accessed_index]);
    moveToMRU(accessed_index);
 }

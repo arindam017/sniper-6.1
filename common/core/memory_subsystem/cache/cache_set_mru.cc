@@ -19,7 +19,7 @@ CacheSetMRU::~CacheSetMRU()
 }
 
 UInt32
-CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
+CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip)
 {
    // Invalidations may mess up the LRU bits
    
@@ -27,7 +27,7 @@ CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
-         updateReplacementIndex(i,0);
+         updateReplacementIndex(i,100);
          return i;
       }
    }
@@ -39,7 +39,7 @@ CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag)
       {
          if (m_lru_bits[i] == target && isValidReplacement(i))
          {
-            updateReplacementIndex(i,0);
+            updateReplacementIndex(i,100);
             return i;
          }
       }
