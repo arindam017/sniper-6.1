@@ -105,6 +105,15 @@ MemoryManager::MemoryManager(Core* core,
          int latency = Sim()->getCfg()->getIntArray("perf_model/l3_cache/data_write_time", core->getId());
          printf("L3 data_write_time:%d\n", latency);
 
+         int size = Sim()->getCfg()->getIntArray("perf_model/l3_cache/cache_size", core->getId());
+         printf("L3 cache_size:%d\n", size);
+
+         String policy = Sim()->getCfg()->getStringArray("perf_model/l3_cache/replacement_policy", core->getId());
+         printf("L3 replacement_policy:%s\n", policy.c_str());
+
+         String l2policy = Sim()->getCfg()->getStringArray("perf_model/l2_cache/replacement_policy", core->getId());
+         printf("L2 replacement_policy:%s\n\n", l2policy.c_str());
+
          const ComponentPeriod *clock_domain = NULL;
          String domain_name = Sim()->getCfg()->getStringArray("perf_model/" + configName + "/dvfs_domain", core->getId());
          if (domain_name == "core")

@@ -39,7 +39,7 @@ class CachePerfModelParallel : public CachePerfModel
             {
                //printf("cycles = %s\n", itostr(m_cache_data_write_time.getLatency()).c_str());
                return m_cache_data_write_time.getLatency();
-             }
+            }
 
             case WRITE_CACHE_DATA:					//sn: this enum has been added in cache_perf_model.h
                return m_cache_data_write_time.getLatency();

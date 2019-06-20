@@ -212,6 +212,7 @@ Cache::getBlockIndex(IntPtr addr)   //sn copied from anushree
 
     // CacheBlockInfo* cache_block_info = CacheBlockInfo::create(m_cache_type);
     blockIndex = m_sets[set_index]->getBlockIndexForGivenTag(tag);
+    printf("blockIndex is %d \n", blockIndex);
 
     return blockIndex;
 }

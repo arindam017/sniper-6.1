@@ -12,7 +12,7 @@ parser="./parser_all_qsize.py"
 
 #REUSE SELECTED BENCHMARKS = 15
 #benchmarks=(astar bwaves bzip cactusADM gcc GemsFDTD lbm leslie libq mcf milc omnetpp soplex sphinx)
-benchmarks=(bzip cactusADM gcc lbm libq milc soplex)
+benchmarks=(bzip gcc GemsTDTD hmmer lbm leslie libq mcf milc omnetpp soplex tonto wrf zeusmp cactusADM)
 
 
 #Thrashing benchmarks = 8 milc to be added.
@@ -28,7 +28,7 @@ benchmarks=(bzip cactusADM gcc lbm libq milc soplex)
 #suffix=(1 10 20 100)
 #benchmarks=(cactusADM mcf sphinx milc astar leslie lbm bwaves libq)
 #benchmarks=(cactusADM sphinx)
-for i in {0..6}
+for i in {0..14}
     do
 	echo "===================================================================================================================================="
 	echo ""
@@ -36,7 +36,12 @@ for i in {0..6}
 	echo ""
 	echo ""
 	#/home/abhijit/parser_files/ultimate_parser_single_core.py /home/abhijit/sniper_original/sniper-6.1_experimental/results/RECENTLY_INSERTED_AND_REUSED_3/${benchmarks[i]} 1
-	/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/LRU_30_2/${benchmarks[i]} 1
+	#/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/LRU_30_2/${benchmarks[i]} 1
+	#/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/LRU_180_2/${benchmarks[i]} 1
+	/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/LRU_180_8/${benchmarks[i]} 1
+	#/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/LAP_180_2/${benchmarks[i]} 1
+	/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/LAP_180_8/${benchmarks[i]} 1
+	#/home/arindam/Desktop/Sniper/sniper-6.1/parser_files/ultimate_parser_single_core.py /home/arindam/Desktop/Sniper/sniper-6.1/expt_results/PHC_180_8/${benchmarks[i]} 1
 	echo ""
 	echo ""
 	echo ""
