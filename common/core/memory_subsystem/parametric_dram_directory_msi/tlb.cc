@@ -49,7 +49,7 @@ TLB::allocate(IntPtr address, SubsecondTime now)
    bool eviction;
    IntPtr evict_addr;
    CacheBlockInfo evict_block_info;
-   m_cache.insertSingleLine(address, NULL, &eviction, &evict_addr, &evict_block_info, NULL, now, 0, 100, 0); //nss
+   m_cache.insertSingleLine(address, NULL, &eviction, &evict_addr, &evict_block_info, NULL, now, 0, 0); //nss
 
    // Use next level as a victim cache
    if (eviction && m_next_level)

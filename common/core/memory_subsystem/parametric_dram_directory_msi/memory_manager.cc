@@ -105,15 +105,6 @@ MemoryManager::MemoryManager(Core* core,
          int latency = Sim()->getCfg()->getIntArray("perf_model/l3_cache/data_write_time", core->getId());
          printf("L3 data_write_time:%d\n", latency);
 
-         int size = Sim()->getCfg()->getIntArray("perf_model/l3_cache/cache_size", core->getId());
-         printf("L3 cache_size:%d\n", size);
-
-         String policy = Sim()->getCfg()->getStringArray("perf_model/l3_cache/replacement_policy", core->getId());
-         printf("L3 replacement_policy:%s\n", policy.c_str());
-
-         String l2policy = Sim()->getCfg()->getStringArray("perf_model/l2_cache/replacement_policy", core->getId());
-         printf("L2 replacement_policy:%s\n\n", l2policy.c_str());
-
          const ComponentPeriod *clock_domain = NULL;
          String domain_name = Sim()->getCfg()->getStringArray("perf_model/" + configName + "/dvfs_domain", core->getId());
          if (domain_name == "core")
@@ -177,7 +168,7 @@ MemoryManager::MemoryManager(Core* core,
             Sim()->getCfg()->getStringArray("perf_model/nuca/replacement_policy", core->getId()),
             false, true,
             ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/data_access_time", core->getId())),
-            ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/data_write_time", core->getId())),	//sn
+            ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/data_write_time", core->getId())),
             ComponentLatency(global_domain, Sim()->getCfg()->getIntArray("perf_model/nuca/tags_access_time", core->getId())),
             ComponentLatency(global_domain, 0), ComponentBandwidthPerCycle(global_domain, 0), "", false, 0, "", 0 // unused
          );
@@ -442,9 +433,6 @@ MemoryManager::coreInitiateMemoryAccess(
       Core::MemModeled modeled,
       IntPtr eip)
 {
-
-   //printf("coreInitiateMemoryAccess is called and eip is: %" PRIxPTR "\n", eip);  //ssn
-
    LOG_ASSERT_ERROR(mem_component <= m_last_level_cache,
       "Error: invalid mem_component (%d) for coreInitiateMemoryAccess", mem_component);
 
@@ -468,7 +456,7 @@ MemoryManager::handleMsgFromNetwork(NetPacket& packet)
 {
 MYLOG("begin");
    core_id_t sender = packet.sender;
-   PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg = PrL1PrL2DramDirectoryMSI::ShmemMsg::getShmemMsg((Byte*) packet.data);
+   PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg = PrL1PrL2DramDirectoryMSI::ShmemMsg::getShmemMsg((Byte*) packet.data, &m_dummy_shmem_perf);
    SubsecondTime msg_time = packet.time;
 
    getShmemPerfModel()->setElapsedTime(ShmemPerfModel::_SIM_THREAD, msg_time);
@@ -636,7 +624,16 @@ MemoryManager::getCost(MemComponent::component_t mem_component, CachePerfModel::
    if (mem_component == MemComponent::INVALID_MEM_COMPONENT)
       return SubsecondTime::Zero();
 
-   return m_cache_perf_models[mem_component]->getLatency(access_type);
+   SubsecondTime latency = m_cache_perf_models[mem_component]->getLatency(access_type);
+   
+   #if 0
+   if (MemComponent::L3_CACHE == mem_component)
+   {
+        printf("[Newton] L3 cycles = %s\n", itostr(latency).c_str());
+   }
+   #endif
+   
+   return latency;
 }
 
 void
@@ -647,7 +644,7 @@ MemoryManager::incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t t
 }
 
 SubsecondTime
-MemoryManager::getElapsedTime(ShmemPerfModel::Thread_t thread_num)	//sn; added from Anushree's files
+MemoryManager::getElapsedTime(ShmemPerfModel::Thread_t thread_num)
 {
    return getShmemPerfModel()->getElapsedTime(thread_num);
 }

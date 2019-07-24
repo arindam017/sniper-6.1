@@ -94,13 +94,14 @@ void ATD::access(Core::mem_op_t mem_op_type, bool cache_hit, IntPtr address)
 
       if (atd_hit)
       {
-         m_sets[set_index]->updateReplacementIndex(line_index,100);
+         m_sets[set_index]->updateReplacementIndex(line_index,100,set_index);
       }
       else
       {
          PrL1CacheBlockInfo* cache_block_info = new PrL1CacheBlockInfo(tag, CacheState::MODIFIED);
          bool eviction; PrL1CacheBlockInfo evict_block_info;
          m_sets[set_index]->insert(cache_block_info, NULL, &eviction, &evict_block_info, NULL);
+         delete cache_block_info;
       }
 
       if (mem_op_type == Core::WRITE)

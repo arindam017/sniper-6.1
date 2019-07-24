@@ -86,7 +86,7 @@ namespace ParametricDramDirectoryMSI
          bool coherent;
          ComponentLatency data_access_time;
          ComponentLatency tags_access_time;
-         ComponentLatency data_write_time;	//ns anushree
+         ComponentLatency data_write_time;
          ComponentLatency writeback_time;
          ComponentBandwidthPerCycle next_level_read_bandwidth;
          String perf_model_type;
@@ -98,20 +98,20 @@ namespace ParametricDramDirectoryMSI
          CacheParameters()
             : data_access_time(NULL,0)
             , tags_access_time(NULL,0)
-            , data_write_time(NULL,0)	//ns anushree
+            , data_write_time(NULL,0)
             , writeback_time(NULL,0)
          {}
          CacheParameters(
             String _configName, UInt32 _size, UInt32 _associativity, UInt32 block_size,
             String _hash_function, String _replacement_policy, bool _perfect, bool _coherent,
-            const ComponentLatency& _data_access_time, const ComponentLatency& _tags_access_time,const ComponentLatency& _data_write_time, 		//ns _data_write_time from Anushree
+            const ComponentLatency& _data_access_time, const ComponentLatency& _tags_access_time,const ComponentLatency& _data_write_time,
             const ComponentLatency& _writeback_time, const ComponentBandwidthPerCycle& _next_level_read_bandwidth,
             String _perf_model_type, bool _writethrough, UInt32 _shared_cores,
             String _prefetcher, UInt32 _outstanding_misses)
          :
             configName(_configName), size(_size), associativity(_associativity),
             hash_function(_hash_function), replacement_policy(_replacement_policy), perfect(_perfect), coherent(_coherent),
-            data_access_time(_data_access_time), tags_access_time(_tags_access_time),data_write_time(_data_write_time),							//ns _data_write_time from Anushree
+            data_access_time(_data_access_time), tags_access_time(_tags_access_time),data_write_time(_data_write_time),
             writeback_time(_writeback_time), next_level_read_bandwidth(_next_level_read_bandwidth),
             perf_model_type(_perf_model_type), writethrough(_writethrough), shared_cores(_shared_cores),
             prefetcher(_prefetcher), outstanding_misses(_outstanding_misses)
@@ -260,7 +260,7 @@ namespace ParametricDramDirectoryMSI
          UInt32 m_cache_block_size;
          bool m_cache_writethrough;
          ComponentLatency m_writeback_time;
-         ComponentLatency m_data_write_time;		//sn anuhsree
+         ComponentLatency m_data_write_time;
          ComponentBandwidthPerCycle m_next_level_read_bandwidth;
 
          UInt32 m_shared_cores;        /**< Number of cores this cache is shared with */
@@ -274,6 +274,7 @@ namespace ParametricDramDirectoryMSI
          ShmemPerf* m_shmem_perf_global;
          SubsecondTime m_shmem_perf_totaltime;
          UInt64 m_shmem_perf_numrequests;
+         ShmemPerf m_dummy_shmem_perf;
 
          ShmemPerfModel* m_shmem_perf_model;
 
@@ -285,7 +286,7 @@ namespace ParametricDramDirectoryMSI
          bool operationPermissibleinCache(
                IntPtr address, Core::mem_op_t mem_op_type, CacheBlockInfo **cache_block_info = NULL);
 
-         void copyDataFromNextLevel(Core::mem_op_t mem_op_type, IntPtr address, bool modeled, SubsecondTime t_start, UInt8 flag);
+         void copyDataFromNextLevel(Core::mem_op_t mem_op_type, IntPtr address, bool modeled, SubsecondTime t_start);
          void trainPrefetcher(IntPtr address, bool cache_hit, bool prefetch_hit, SubsecondTime t_issue);
          void Prefetch(SubsecondTime t_start);
          void doPrefetch(IntPtr prefetch_address, SubsecondTime t_start);
@@ -300,8 +301,8 @@ namespace ParametricDramDirectoryMSI
          void invalidateCacheBlock(IntPtr address);
          void retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, bool update_replacement);
 
-         void updateLoopBitCntlr(IntPtr address, UInt8 loopbit);
-         SharedCacheBlockInfo* insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* data_buf, core_id_t requester, ShmemPerfModel::Thread_t thread_num, UInt8 write_flag, IntPtr eip); //sn eip added by arindam
+
+         SharedCacheBlockInfo* insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* data_buf, core_id_t requester, ShmemPerfModel::Thread_t thread_num, IntPtr eip);
          std::pair<SubsecondTime, bool> updateCacheBlock(IntPtr address, CacheState::cstate_t cstate, Transition::reason_t reason, Byte* out_buf, ShmemPerfModel::Thread_t thread_num);
          void writeCacheBlock(IntPtr address, UInt32 offset, Byte* data_buf, UInt32 data_length, ShmemPerfModel::Thread_t thread_num);
 
@@ -403,7 +404,7 @@ namespace ParametricDramDirectoryMSI
 
          bool isInLowerLevelCache(CacheBlockInfo *block_info);
          void incrementQBSLookupCost();
-         void incrementWriteToSTTRAMCost();		//ns anushree
+         void incrementWriteToSTTRAMCost();
 
          void enable() { m_master->m_cache->enable(); }
          void disable() { m_master->m_cache->disable(); }

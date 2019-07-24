@@ -10,8 +10,8 @@ class CachePerfModelSequential : public CachePerfModel
 
    public:
       CachePerfModelSequential(const ComponentLatency& cache_data_access_time,
-            const ComponentLatency& cache_tags_access_time,const ComponentLatency& cache_data_write_time) :	//sn; added cache_data_write_time
-         CachePerfModel(cache_data_access_time, cache_tags_access_time,cache_data_write_time),	//sn; added cache_data_write_time
+            const ComponentLatency& cache_tags_access_time,const ComponentLatency& cache_data_write_time) :
+         CachePerfModel(cache_data_access_time, cache_tags_access_time,cache_data_write_time),
          m_enabled(false)
       {}
       ~CachePerfModelSequential() {}
@@ -36,10 +36,10 @@ class CachePerfModelSequential : public CachePerfModel
             case ACCESS_CACHE_DATA_AND_TAGS:
                return m_cache_data_access_time.getLatency() + m_cache_tags_access_time.getLatency();
 
-            case ACCESS_CACHE_WRITEDATA_AND_TAGS:		//sn: this enum has been added in cache_perf_model.h
+            case ACCESS_CACHE_WRITEDATA_AND_TAGS:
                return m_cache_data_write_time.getLatency() + m_cache_tags_access_time.getLatency();
 
-            case WRITE_CACHE_DATA:						//sn: this enum has been added in cache_perf_model.h
+            case WRITE_CACHE_DATA:
                return m_cache_data_write_time.getLatency();
 
             default:

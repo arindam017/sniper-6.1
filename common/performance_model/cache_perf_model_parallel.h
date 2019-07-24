@@ -10,7 +10,7 @@ class CachePerfModelParallel : public CachePerfModel
 
    public:
       CachePerfModelParallel(const ComponentLatency& cache_data_access_time,
-            const ComponentLatency& cache_tags_access_time,const ComponentLatency& cache_data_write_time) :	//sn; added cache_data_write_time
+            const ComponentLatency& cache_tags_access_time,const ComponentLatency& cache_data_write_time) :
          CachePerfModel(cache_data_access_time, cache_tags_access_time,cache_data_write_time),
          m_enabled(false)
       {}
@@ -35,13 +35,13 @@ class CachePerfModelParallel : public CachePerfModel
                return m_cache_data_access_time.getLatency();
 
             /* As data_access_time is larger than tag_access_time */
-            case ACCESS_CACHE_WRITEDATA_AND_TAGS:	//sn: this enum has been added in cache_perf_model.h
+            case ACCESS_CACHE_WRITEDATA_AND_TAGS:
             {
-               //printf("cycles = %s\n", itostr(m_cache_data_write_time.getLatency()).c_str());
+               //printf("writeback_time cycles = %s\n", itostr(m_cache_data_write_time.getLatency()).c_str());
                return m_cache_data_write_time.getLatency();
-            }
+             }
 
-            case WRITE_CACHE_DATA:					//sn: this enum has been added in cache_perf_model.h
+            case WRITE_CACHE_DATA:
                return m_cache_data_write_time.getLatency();
 
             default:

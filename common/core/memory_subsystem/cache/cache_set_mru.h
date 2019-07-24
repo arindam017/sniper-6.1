@@ -10,9 +10,8 @@ class CacheSetMRU : public CacheSet
             UInt32 associativity, UInt32 blocksize);
       ~CacheSetMRU();
 
-      UInt32 getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip);
-      void updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag);
-	void updateLoopBitPolicy(UInt32 index, UInt8 loopbit); //sn
+      UInt32 getReplacementIndex(CacheCntlr *cntlr, IntPtr eip, UInt32 set_index);
+      void updateReplacementIndex(UInt32 accessed_index, UInt8 write_flag, UInt32 set_index);
 
    private:
       UInt8* m_lru_bits;

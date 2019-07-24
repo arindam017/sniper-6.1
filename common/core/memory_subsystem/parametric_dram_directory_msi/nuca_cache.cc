@@ -92,7 +92,7 @@ NucaCache::write(IntPtr address, Byte* data_buf, bool& eviction, IntPtr& evict_a
       block_info->setCState(CacheState::MODIFIED);
       m_cache->accessSingleLine(address, Cache::STORE, data_buf, m_cache_block_size, now + latency, true);
 
-      latency += accessDataArray(Cache::STORE, now + latency, NULL);
+      latency += accessDataArray(Cache::STORE, now + latency, &m_dummy_shmem_perf);
       hit_where = HitWhere::NUCA_CACHE;
    }
    else
@@ -101,7 +101,7 @@ NucaCache::write(IntPtr address, Byte* data_buf, bool& eviction, IntPtr& evict_a
 
       m_cache->insertSingleLine(address, data_buf,
          &eviction, &evict_address, &evict_block_info, evict_buf,
-         now + latency, 0, 100, 0); //nss
+         now + latency, 0, 0); //nss
 
       if (eviction)
       {

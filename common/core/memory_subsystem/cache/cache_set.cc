@@ -1,9 +1,6 @@
 #include "cache_set.h"
 #include "cache_set_lru.h"
-#include "cache_set_lru_new.h"
 #include "cache_set_phc.h"
-#include "cache_set_lru_l3.h"
-#include "cache_set_lru_l2.h"
 #include "cache_set_mru.h"
 #include "cache_set_nmru.h"
 #include "cache_set_nru.h"
@@ -46,7 +43,7 @@ CacheSet::~CacheSet()
 }
 
 void
-CacheSet::read_line(UInt32 line_index, UInt32 offset, Byte *out_buff, UInt32 bytes, bool update_replacement)
+CacheSet::read_line(UInt32 line_index, UInt32 offset, Byte *out_buff, UInt32 bytes, bool update_replacement, UInt32 set_index)
 {
    assert(offset + bytes <= m_blocksize);
    //assert((out_buff == NULL) == (bytes == 0));
@@ -58,12 +55,12 @@ CacheSet::read_line(UInt32 line_index, UInt32 offset, Byte *out_buff, UInt32 byt
    if (update_replacement)
    {
       //printf("updateReplacementIndex called for read hit \n"); //n
-      updateReplacementIndex(line_index,0);
+      updateReplacementIndex(line_index, 0, set_index);
    }
 }
 
 void
-CacheSet::write_line(UInt32 line_index, UInt32 offset, Byte *in_buff, UInt32 bytes, bool update_replacement)
+CacheSet::write_line(UInt32 line_index, UInt32 offset, Byte *in_buff, UInt32 bytes, bool update_replacement, UInt32 set_index)
 {
    
    assert(offset + bytes <= m_blocksize);
@@ -76,7 +73,7 @@ CacheSet::write_line(UInt32 line_index, UInt32 offset, Byte *in_buff, UInt32 byt
    if (update_replacement)
    {
       //printf("updateReplacementIndex called for write hit \n"); //n
-      updateReplacementIndex(line_index,1);
+      updateReplacementIndex(line_index, 1, set_index);
    }
 }
 
@@ -111,14 +108,11 @@ CacheSet::invalidate(IntPtr& tag)
 
 /////////////////created by arindam///////////////////////////
 void
-CacheSet::insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr, UInt8 write_flag, IntPtr eip) //sn insert2 function is insert with additional argument
+CacheSet::insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr, IntPtr eip, UInt32 set_index) //sn insert2 function is insert with additional argument
 {
    // This replacement strategy does not take into account the fact that
    // cache blocks can be voluntarily flushed or invalidated due to another write request
-   //printf("getReplacementIndex called \n"); //n
-   //printf("flag is %d inside insert2 \n", write_flag);   //sn
-   //printf("insert2 is called and eip is %" PRIxPTR "\n", eip); //sn
-   const UInt32 index = getReplacementIndex(cntlr, write_flag, eip);
+   const UInt32 index = getReplacementIndex(cntlr, eip, set_index);
    
    assert(index < m_associativity);
 
@@ -153,9 +147,7 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
 {
    // This replacement strategy does not take into account the fact that
    // cache blocks can be voluntarily flushed or invalidated due to another write request
-   //printf("getReplacementIndex called \n"); //n
-   const UInt32 index = getReplacementIndex(cntlr, 100, 0);
-   
+   const UInt32 index = getReplacementIndex(cntlr, 0, 0);
    assert(index < m_associativity);
 
    assert(eviction != NULL);
@@ -164,7 +156,7 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
    {
       *eviction = true;
       // FIXME: This is a hack. I dont know if this is the best way to do
-      evict_block_info->clone(m_cache_block_info_array[index]);   //m_cache_block_info_array[index] will be evicted. so it is cloned in evict_block_info [ARINDAM]
+      evict_block_info->clone(m_cache_block_info_array[index]);
       if (evict_buff != NULL && m_blocks != NULL)
          memcpy((void*) evict_buff, &m_blocks[index * m_blocksize], m_blocksize);
    }
@@ -174,52 +166,11 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
    }
 
    // FIXME: This is a hack. I dont know if this is the best way to do
-   m_cache_block_info_array[index]->clone(cache_block_info);   //insertion occurs here mainly. cache_block_info is copied into m_cache_block_info_array[index] [ARINDAM]
+   m_cache_block_info_array[index]->clone(cache_block_info);
 
    if (fill_buff != NULL && m_blocks != NULL)
       memcpy(&m_blocks[index * m_blocksize], (void*) fill_buff, m_blocksize);
 }
-
-
-
-///////////////created by Arindam/////////////////////sn
-void
-CacheSet::updateLoopBitSet(IntPtr tag, UInt8 loopbit)
-{
-   UInt32 index=0;
-   UInt32 temp_index=0;
-   int count=0;
-
-   for(UInt32 i=0;i<m_associativity;i++)
-   {
-      if(m_cache_block_info_array[i]->getTag()==tag)
-      {
-         //printf("tag matches at index = %d and tag is  %" PRIxPTR , i,tag);      //sn
-         temp_index=i;
-         count=1;
-      }
-   }
-   /*
-   printf("\n******************\n");     //sn
-
-   for(UInt32 j=0;j<m_associativity;j++)
-   {
-      printf("  %" PRIxPTR , m_cache_block_info_array[j]->getTag());  //sn
-   }
-
-    printf("\n******************\n");     //sn
-   */ 
-
-   if(count==1)
-   {
-      count=0;
-      index=temp_index;
-      //printf("tag match occurs, index is %d, loopbit is %d (printed in updateLoopBitSet)\n", index,loopbit);  //sn
-      updateLoopBitPolicy(index, loopbit);
-   }
-}
-//////////////////////////////////////////////////////
-
 
 char*
 CacheSet::getDataPtr(UInt32 line_index, UInt32 offset)
@@ -243,18 +194,9 @@ CacheSet::createCacheSet(String cfgname, core_id_t core_id,
       case CacheBase::LRU_QBS:
          return new CacheSetLRU(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
 
-      case CacheBase::LRU_NEW:
-         return new CacheSetLRUNEW(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
 
       case CacheBase::PHC:
          return new CacheSetPHC(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
-
-      case CacheBase::LRU_L3:
-         return new CacheSetLRUL3(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
-
-      case CacheBase::LRU_L2:
-         return new CacheSetLRUL2(cache_type, associativity, blocksize, dynamic_cast<CacheSetInfoLRU*>(set_info), getNumQBSAttempts(policy, cfgname, core_id));
-
       case CacheBase::NRU:
          return new CacheSetNRU(cache_type, associativity, blocksize);
 
@@ -291,9 +233,6 @@ CacheSet::createCacheSetInfo(String name, String cfgname, core_id_t core_id, Str
    {
       case CacheBase::LRU:
       case CacheBase::LRU_QBS:
-      case CacheBase::LRU_NEW:
-      case CacheBase::LRU_L3:
-      case CacheBase::LRU_L2:
       case CacheBase::PHC:
       case CacheBase::SRRIP:
       case CacheBase::SRRIP_QBS:
@@ -323,14 +262,8 @@ CacheSet::parsePolicyType(String policy)
       return CacheBase::ROUND_ROBIN;
    if (policy == "lru")
       return CacheBase::LRU;
-   if (policy == "lrunew")
-      return CacheBase::LRU_NEW;
    if (policy == "phc")
       return CacheBase::PHC;
-   if (policy == "lrul3")
-      return CacheBase::LRU_L3;
-   if (policy == "lrul2")
-      return CacheBase::LRU_L2;
    if (policy == "lru_qbs")
       return CacheBase::LRU_QBS;
    if (policy == "nru")
@@ -380,7 +313,7 @@ CacheSet::getBlockIndexForGivenTag(IntPtr tagToFind)  //sn copied from anushree
         }
     }
 
-    assert(blockIndex != -1);
+    //assert(blockIndex != -1);
     return blockIndex;
 }
 

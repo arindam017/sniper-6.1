@@ -45,27 +45,26 @@ class CacheSet
       UInt32 getAssociativity() { return m_associativity; }
       Lock& getLock() { return m_lock; }
 
-      void read_line(UInt32 line_index, UInt32 offset, Byte *out_buff, UInt32 bytes, bool update_replacement);
-      void write_line(UInt32 line_index, UInt32 offset, Byte *in_buff, UInt32 bytes, bool update_replacement);
+      void read_line(UInt32 line_index, UInt32 offset, Byte *out_buff, UInt32 bytes, bool update_replacement, UInt32 set_index);
+      void write_line(UInt32 line_index, UInt32 offset, Byte *in_buff, UInt32 bytes, bool update_replacement, UInt32 set_index);
       CacheBlockInfo* find(IntPtr tag, UInt32* line_index = NULL);
       bool invalidate(IntPtr& tag);
       void insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr = NULL);
-      void insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr = NULL, UInt8 write_flag=100, IntPtr eip=0);  //sn added by arindam
-      void updateLoopBitSet(IntPtr tag, UInt8 loopbit); //sn
+      void insert2(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr = NULL, IntPtr eip=0, UInt32 set_index=0);  //sn added by arindam
+      
 
       CacheBlockInfo* peekBlock(UInt32 way) const { return m_cache_block_info_array[way]; }
 
       char* getDataPtr(UInt32 line_index, UInt32 offset = 0);
       UInt32 getBlockSize(void) const { return m_blocksize; }
 
-      virtual UInt32 getReplacementIndex(CacheCntlr *cntlr, UInt8 l3_hit_flag, IntPtr eip) = 0;
-      virtual void updateReplacementIndex(UInt32, UInt8) = 0;
-      virtual void updateLoopBitPolicy(UInt32, UInt8) = 0; //sn
+      virtual UInt32 getReplacementIndex(CacheCntlr *cntlr, IntPtr eip, UInt32 set_index) = 0;
+      virtual void updateReplacementIndex(UInt32, UInt8, UInt32) = 0;
 
       bool isValidReplacement(UInt32 index);
 
       /* Returns the index of the block which can be evicted */  
-      UInt32 getBlockIndexForGivenTag(IntPtr tagToFind); //sn copied from anushree
+      UInt32 getBlockIndexForGivenTag(IntPtr tagToFind);
 };
 
 #endif /* CACHE_SET_H */

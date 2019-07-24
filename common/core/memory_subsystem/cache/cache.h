@@ -57,8 +57,7 @@ class Cache : public CacheBase
             access_t access_type, Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement);
       void insertSingleLine(IntPtr addr, Byte* fill_buff,
             bool* eviction, IntPtr* evict_addr,
-            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL, int mcomponent=0, UInt8 write_flag=100, IntPtr eip=0); //nss; int mcomponent, write_flag and eip argument has been added by ARINDAM.
-      void updateLoopBitCache(IntPtr addr, UInt8 loopbit); //sn
+            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL, int mcomponent=0, IntPtr eip=0);
       CacheBlockInfo* peekSingleLine(IntPtr addr);
 
       CacheBlockInfo* peekBlock(UInt32 set_index, UInt32 way) const { return m_sets[set_index]->peekBlock(way); }
@@ -68,8 +67,8 @@ class Cache : public CacheBase
       void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
       /* Calls the cache_set to get index of the block specified
-       * by the addr */ 
-      UInt32 getBlockIndex(IntPtr addr);  //sn copied from anushree
+       * by the addr */
+      UInt32 getBlockIndex(IntPtr addr);
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
